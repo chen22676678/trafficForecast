@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<title>Road traffic forecast API</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<style>
+        .g-progress {
+            width: 360px;
+            height: 30px;
+            border-radius: 5px;
+            background: linear-gradient(90deg, #00cc00 16.5%, #66ff66 16.5%, #66ff66 33%,
+			#ffcc00 33%, #ff9933 34%, #ff9933 50%, #ff3300 50%, transparent 0);
+            border: 3px solid #8f8f8f;
+        }
+		.form-control {
+    display: block;
+    width: 22%;
+    height: calc(1.5em + 0.75rem + 2px);
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+</style>
+</head>
+<body>
+
+<div class="jumbotron text-center">
+    <div class="col-4 mx-auto text-center">
+        <img src="{{url_for('static', filename='logo.png')}}" class="rounded-circle" width="214" height="100">
+    </div>
+	<br>
+  <h1>道路交通流量预测</h1>
+  <h4>道路交通流量预测模型效果演示界面  </h4>
+
+  
+</div>
+  
+<div class="container">
+  <div class="row">
+    <div class="col-sm-6">
+      <h4 style="text-align:center">LSTM static time step three-day graph</h4>
+	  <img src="{{url_for('static', filename='LSTM_static_3Day.png')}}" class="img-thumbnail">
+    </div>
+    <div class="col-sm-6">
+      <h4 style="text-align:center">GRU static time step three-day graph</h4>
+	  <img src="{{url_for('static', filename='GRU_static_3Day.png')}}" class="img-thumbnail">
+    </div>
+  </div>
+  <br>
+  <div class="row">
+     <div class="col-sm-6">
+     	<h4 style="text-align:center">LSTM, GRU dynamic time step 12-hour graph</h4>
+	 	<img src="{{url_for('static', filename='LSTM_GRU_dynamic_12H.png')}}" class="img-thumbnail">
+    </div>
+
+    <div style="text-align:center;" class="col-sm-6">
+      <h4 style="text-align:center"><p>两种模型训练结果对比</p></h4><br>
+	  <table style="text-align:center;" class="table table-striped table-hover">
+		<thead>
+			<tr>
+				<th>Metrics</th>
+				<th>MAE</th>
+				<th>MSE</th>
+				<th>RMSE</th>
+				<th>MAPE</th>
+				<th>R2</th>
+				<th>VS</th>
+
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>LSTM</td>
+				<td>7.197</td>
+				<td>99.613</td>
+				<td>9.980</td>
+				<td>4.565</td>
+				<td>0.997</td>
+				<td>0.997</td>
+			</tr>
+			<tr>
+				<td>GRU</td>
+				<td>14.670</td>
+				<td>514.314</td>
+				<td>22.678</td>
+				<td>7.813</td>
+				<td>0.985</td>
+				<td>0.986</td>
+			</tr>
+		</tbody>
+	 </table>
+    </div>
+ </div>
+ <br>
+ <div class="row">
+    <div class="col-sm-6"><br>
+      <h5 style="text-align:center">Input data to test LSTM and GRU models.<p style="color:red;">Data available from 2019-05-20</p></h5><br>
+	  <form action="{{ url_for('main') }}" method="POST" class="needs-validation" novalidate>
+		<div class="form-group">
+			<div class="result" align="center" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
+
+				<div style="display: inline-block;font-size: 20px">Date:</div>
+				<input type="text" class="form-control"  placeholder="yyyy-mm-dd" name="date" value="{{ date }}" required>
+				<div class="invalid-feedback">Please fill out this field.</div>
+
+				<div style="display: inline-block;font-size: 20px">Time:</div>
+				<input type="text" class="form-control"  placeholder="hh:mm" name="time" value="{{ time }}" required>
+				<div class="invalid-feedback">Please fill out this field.</div>
+				<button type="submit" class="btn btn-outline-secondary">Predict</button><br>
+			</div>
+
+
+		</div>
+	  </form><br>	  
+    </div><br>
+	 <div class="col-sm-6">
+		<div class="result" align="center" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
+		{% if true_val %}
+		True number<p style="font-size:40px">{{ true_val }}</p>
+		LSTM Predicted Number<p style="font-size:40px;color:green;">{{ pred_val_LSTM }}</p>
+		GRU Predicted Number<p style="font-size:40px;color:green;">{{ pred_val_GRU}}</p>
+		{% endif %}
+		</div>
+		<br>
+<!--		拥堵率:<p><div class="g-progress"></div></p><br>{{ percentage }}%-->
+		 <div class="result" align="center" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
+			{% if percentage %}
+			<div style="display: inline-block;font-size: 25px">Flow/Capacity:</div>
+			<div class="g-progress" style="display: inline-block;"></div>
+			<div style="display: inline-block;font-size: 25px">{{ percentage }}%</div>
+			{% endif %}
+		</div>
+	</div><br>
+
+ </div>
+</div>
+</body>
+<script>
+        var percent = {{ percentage }}; // 假设传入的百分比为50
+
+        // 更新渐变条形图的背景颜色
+        if (percent < 34) {
+            document.querySelector('.g-progress').style.background = "linear-gradient(90deg, #00cc00 " + percent + "%, transparent 0)";
+        } else if (percent < 66.7) {
+            document.querySelector('.g-progress').style.background = "linear-gradient(90deg, #00cc00 34%, #ffcc00 " + percent + "%, transparent 0)";
+        } else {
+            document.querySelector('.g-progress').style.background = "linear-gradient(90deg, #00cc00 34%, #ffcc00 66.7%, #ff3300 " + percent + "%, transparent 0)";
+        }
+    </script>
+</html>
